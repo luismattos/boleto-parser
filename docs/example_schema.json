@@ -1,0 +1,50 @@
+{
+  "cnpj_instituicao": "12.345.678/0001-90",
+  "numero_boleto": "12345678",
+  "vencimento": "15/08/2025",
+  "data_documento": "01/08/2025",
+  "beneficiario": {
+    "nome": "INSTITUIÇÃO EDUCACIONAL EXEMPLO LTDA",
+    "cnpj": "12.345.678/0001-90",
+    "agencia": "0001",
+    "codigo_beneficiario": "123456",
+    "nosso_numero": "000012345678"
+  },
+  "pagador": {
+    "nome": "JOÃO DA SILVA SANTOS",
+    "cpf_cnpj": "123.456.789-00",
+    "endereco": "RUA EXEMPLO, 123 - CENTRO - SÃO PAULO/SP",
+    "cep": "01234-567"
+  },
+  "aluno": {
+    "nome": "MARIA SANTOS OLIVEIRA",
+    "matricula": "2024001",
+    "curso": "ENGENHARIA DE SOFTWARE",
+    "turno": "N",
+    "codigo": "10001"
+  },
+  "valores": {
+    "valor_documento": 500.0,
+    "valor_cobrado": 500.0,
+    "total_debitos": 1500.0
+  },
+  "informacoes_bancarias": {
+    "banco": "BANCO EXEMPLO S.A.",
+    "codigo_barras": "123456789012345678901234567890123456789012345678901234567890",
+    "carteira": "RCR",
+    "especie": "RC",
+    "aceite": "N"
+  },
+  "instrucoes": {
+    "local_pagamento": "Pagável em qualquer Banco até a Data de Vencimento",
+    "multa_vencimento": "R$10,00",
+    "juros_dia_atraso": "R$0,50",
+    "restricoes": "Só receber até o vencimento..."
+  },
+  "endereco_instituicao": {
+    "endereco": "RUA DA INSTITUIÇÃO, 456 - CENTRO - SÃO PAULO/SP",
+    "cep": "01234-567"
+  },
+  "tipo_boleto": "educacional",
+  "texto_extraido": "texto bruto extraído do PDF..."
+}
