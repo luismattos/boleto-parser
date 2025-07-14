@@ -12,7 +12,7 @@ from rich.prompt import Confirm
 from rich.table import Table
 
 from .logger import get_logger, setup_default_logging
-from .parser import BoletoParser
+from .parser import BoletoParser, BoletoDecoder
 
 # Configurar console
 console = Console()
@@ -216,16 +216,25 @@ def _display_pretty(data: dict):
     table.add_column("Campo", style="cyan")
     table.add_column("Valor", style="green")
 
-    table.add_row("Número do Boleto", data.get("numero_boleto", ""))
-    table.add_row("Vencimento", data.get("vencimento", ""))
-    table.add_row(
-        "Valor", f"R$ {data.get('valores', {}).get('valor_documento', 0):.2f}"
-    )
-    table.add_row("Beneficiário", data.get("beneficiario", {}).get("nome", ""))
-    table.add_row("Pagador", data.get("pagador", {}).get("nome", ""))
-    if data.get("aluno"):
-        table.add_row("Aluno", data["aluno"].get("nome", ""))
-    table.add_row("Tipo", data.get("tipo_boleto", ""))
+    # Adaptar para dados de decodificação
+    if "banco" in data:
+        # Dados de decodificação
+        table.add_row("Banco", data.get("banco", {}).get("nome", ""))
+        table.add_row("Valor", f"R$ {data.get('valor', 0):.2f}")
+        table.add_row("Vencimento", data.get("vencimento", ""))
+        table.add_row("Código de Barras", data.get("codigo_barras", ""))
+    else:
+        # Dados de parsing
+        table.add_row("Número do Boleto", data.get("numero_boleto", ""))
+        table.add_row("Vencimento", data.get("vencimento", ""))
+        table.add_row(
+            "Valor", f"R$ {data.get('valores', {}).get('valor_documento', 0):.2f}"
+        )
+        table.add_row("Beneficiário", data.get("beneficiario", {}).get("nome", ""))
+        table.add_row("Pagador", data.get("pagador", {}).get("nome", ""))
+        if data.get("aluno"):
+            table.add_row("Aluno", data["aluno"].get("nome", ""))
+        table.add_row("Tipo", data.get("tipo_boleto", ""))
 
     console.print(table)
 
@@ -250,6 +259,69 @@ def _display_table(data: dict):
             table.add_row(key, str(value))
 
     console.print(table)
+
+
+@app.command()
+def decode(
+    digitavel: str = typer.Argument(
+        ..., help="Código digitável do boleto (ex: 03399.16140 70000.019182 81556.601014 4 11370000038936)"
+    ),
+    output: Optional[str] = typer.Option(
+        None, "--output", "-o", help="Arquivo de saída JSON"
+    ),
+    format: OutputFormat = typer.Option(
+        OutputFormat.json, "--format", "-f", help="Formato de saída"
+    ),
+    verbose: bool = typer.Option(False, "--verbose", "-v", help="Modo verboso"),
+):
+    """
+    Decodifica um código digitável de boleto bancário.
+
+    [bold green]Exemplos:[/bold green]
+
+    • Decodificação básica:
+        [code]python -m src.cli decode "03399.16140 70000.019182 81556.601014 4 11370000038936"[/code]
+
+    • Decodificação com saída formatada:
+        [code]python -m src.cli decode "03399.16140 70000.019182 81556.601014 4 11370000038936" --format pretty[/code]
+
+    • Decodificação salvando em arquivo:
+        [code]python -m src.cli decode "03399.16140 70000.019182 81556.601014 4 11370000038936" --output dados.json[/code]
+    """
+    logger = get_logger("cli")
+
+    try:
+        logger.info("Iniciando decodificação", digitavel=digitavel)
+
+        if verbose:
+            console.print(f"[yellow]Decodificando:[/yellow] {digitavel}")
+
+        # Criar decoder e processar
+        decoder = BoletoDecoder()
+        dados = decoder.decodificar_digitavel(digitavel)
+
+        logger.info("Código digitável decodificado com sucesso", banco=dados["banco"]["nome"])
+
+        if verbose:
+            console.print("[green]✓[/green] Código digitável decodificado com sucesso!")
+            console.print(f"[blue]Banco:[/blue] {dados['banco']['nome']}")
+            console.print(f"[blue]Valor:[/blue] R$ {dados['valor']:.2f}")
+            console.print(f"[blue]Vencimento:[/blue] {dados['vencimento']}")
+
+        # Saída baseada no formato
+        if output:
+            _save_output(dados, output, format)
+            logger.info("Dados salvos em arquivo", arquivo=output, formato=format.value)
+            console.print(f"[green]✓[/green] Dados salvos em: {output}")
+        else:
+            _display_output(dados, format)
+
+    except Exception as e:
+        logger.error("Erro durante decodificação", erro=str(e), digitavel=digitavel)
+        console.print(f"[red]Erro:[/red] {str(e)}")
+        if verbose:
+            console.print_exception()
+        raise typer.Exit(1)
 
 
 @app.command()

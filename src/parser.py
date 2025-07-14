@@ -2,7 +2,7 @@ import re
 import subprocess
 import tempfile
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Dict, Any
 
 from .logger import get_logger
 from .models import (
@@ -17,12 +17,144 @@ from .models import (
 )
 
 
+class BoletoDecoder:
+    """Decodificador de códigos de barras e digitáveis de boletos bancários"""
+    
+    def __init__(self):
+        self.logger = get_logger("boleto_decoder")
+    
+    def decodificar_digitavel(self, digitavel: str) -> Dict[str, Any]:
+        """
+        Decodifica o código digitável do boleto bancário
+        
+        Formato esperado: 03399.16140 70000.019182 81556.601014 4 11370000038936
+        """
+        self.logger.info("Decodificando código digitável", digitavel=digitavel)
+        
+        # Remove espaços e pontos
+        digitavel_limpo = re.sub(r'[.\s]', '', digitavel)
+        
+        if len(digitavel_limpo) != 47:
+            raise ValueError("Código digitável deve ter 47 dígitos")
+        
+        # Estrutura do código de barras (47 dígitos):
+        # 03399.16140 70000.019182 81556.601014 4 11370000038936
+        # |-----|------|----------|----------|-|---------------|
+        # |Banco|Moeda|FatorVenc|Valor    |D|Campo Livre    |
+        
+        try:
+            # Extrair componentes
+            banco = digitavel_limpo[0:3]
+            moeda = digitavel_limpo[3:4]
+            fator_vencimento = digitavel_limpo[4:8]
+            valor = digitavel_limpo[8:17]
+            digito_verificador = digitavel_limpo[17:18]
+            campo_livre = digitavel_limpo[18:47]
+            
+            # Converter valor (últimos 2 dígitos são centavos)
+            valor_decimal = float(valor) / 100
+            
+            # Converter fator de vencimento para data
+            data_vencimento = self._fator_para_data(int(fator_vencimento))
+            
+            # Identificar banco
+            nome_banco = self._identificar_banco(banco)
+            
+            resultado = {
+                "banco": {
+                    "codigo": banco,
+                    "nome": nome_banco
+                },
+                "moeda": moeda,
+                "vencimento": data_vencimento,
+                "valor": valor_decimal,
+                "digito_verificador": digito_verificador,
+                "campo_livre": campo_livre,
+                "codigo_barras": self._gerar_codigo_barras(digitavel_limpo)
+            }
+            
+            self.logger.info("Código digitável decodificado com sucesso", 
+                           banco=nome_banco, valor=valor_decimal)
+            
+            return resultado
+            
+        except Exception as e:
+            self.logger.error("Erro ao decodificar código digitável", erro=str(e))
+            raise ValueError(f"Erro ao decodificar código digitável: {e}")
+    
+    def _fator_para_data(self, fator: int) -> str:
+        """Converte fator de vencimento para data"""
+        # Data base: 07/10/1997
+        from datetime import datetime, timedelta
+        
+        data_base = datetime(1997, 10, 7)
+        data_vencimento = data_base + timedelta(days=fator)
+        return data_vencimento.strftime("%d/%m/%Y")
+    
+    def _identificar_banco(self, codigo: str) -> str:
+        """Identifica o banco pelo código"""
+        bancos = {
+            "001": "Banco do Brasil",
+            "033": "Santander",
+            "104": "Caixa Econômica Federal",
+            "237": "Bradesco",
+            "341": "Itaú",
+            "756": "Sicoob",
+            "422": "Safra",
+            "033": "Santander",
+            "077": "Inter",
+            "212": "Banco Original",
+            "260": "Nu Pagamentos",
+            "336": "C6 Bank",
+            "655": "Banco Votorantim",
+            "041": "Banrisul",
+            "004": "Banco do Nordeste",
+            "021": "Banestes",
+            "047": "Banco do Estado de Sergipe",
+            "085": "Cecred",
+            "097": "Credisis",
+            "136": "Unicred",
+            "151": "Cooperativa Sicredi",
+            "318": "Banco BMG",
+            "356": "Banco Real",
+            "389": "Banco Mercantil",
+            "399": "HSBC",
+            "633": "Banco Rendimento",
+            "652": "Itaú Unibanco",
+            "745": "Citibank",
+            "748": "Sicredi",
+            "756": "Sicoob",
+            "085": "Cecred",
+            "097": "Credisis",
+            "136": "Unicred",
+            "151": "Cooperativa Sicredi",
+            "318": "Banco BMG",
+            "356": "Banco Real",
+            "389": "Banco Mercantil",
+            "399": "HSBC",
+            "633": "Banco Rendimento",
+            "652": "Itaú Unibanco",
+            "745": "Citibank",
+            "748": "Sicredi",
+            "756": "Sicoob"
+        }
+        return bancos.get(codigo, f"Banco {codigo}")
+    
+    def _gerar_codigo_barras(self, digitavel: str) -> str:
+        """Gera código de barras a partir do digitável"""
+        # Remove dígitos verificadores e reorganiza
+        # Formato: 03399161407000001918281556601014411370000038936
+        return (digitavel[0:4] + digitavel[32:47] + digitavel[4:9] + 
+                digitavel[10:20] + digitavel[21:31])
+
+
 class BoletoParser:
     """Parser inteligente para boletos bancários PDF"""
 
     def __init__(self):
         self.texto_extraido = ""
         self.logger = get_logger("boleto_parser")
+        self.decoder = BoletoDecoder()
 
     def detectar_tipo_arquivo(self, caminho_arquivo: str) -> str:
         """Detecta o tipo do arquivo usando o comando 'file'"""
@@ -271,6 +403,87 @@ class BoletoParser:
 
         return EnderecoInstituicao(endereco=endereco, cep=cep)
 
+    def _extrair_dados_extras(self) -> Dict[str, Any]:
+        """Extrai dados extras e opcionais que não se encaixam nos campos padrão"""
+        dados_extras = {}
+        
+        # Padrões para dados extras comuns
+        padroes_extras = {
+            "protocolo": r"Protocolo[:\s]*(\d+)",
+            "codigo_curso": r"Código do Curso[:\s]*(\d+)",
+            "turma": r"Turma[:\s]*([A-Z0-9]+)",
+            "disciplina": r"Disciplina[:\s]*([A-Za-z\s]+)",
+            "periodo": r"Período[:\s]*(\d+)",
+            "semestre": r"Semestre[:\s]*(\d+)",
+            "ano_letivo": r"Ano Letivo[:\s]*(\d{4})",
+            "codigo_baixa": r"Código de Baixa[:\s]*(\d+)",
+            "uso_banco": r"Uso do Banco[:\s]*([A-Za-z0-9\s]+)",
+            "quantidade": r"Quantidade[:\s]*(\d+)",
+            "data_processamento": r"Data processamento[:\s]*(\d{2}/\d{2}/\d{4})",
+            "especie_doc": r"Espécie Doc\s*\n([A-Za-z]{2,})",
+            "aceite": r"Aceite[:\s]*([A-Z])",
+            "codigo_beneficiario_completo": r"Código do Beneficiário[:\s]*(\d+)",
+            "agencia_completa": r"Agência[:\s]*(\d+)",
+            "conta_corrente": r"Conta[:\s]*(\d+)",
+            "nosso_numero_completo": r"Nosso Número[:\s]*(\d+)",
+            "numero_documento": r"Nº do Documento[:\s]*(\d+)",
+            "carteira_completa": r"Carteira[:\s]*([A-Za-z0-9]+)",
+            "especie_completa": r"Espécie[:\s]*([A-Za-z]+)",
+            "valor_abatimento": r"Abatimento[:\s]*R\$\s*([\d,]+\.?\d*)",
+            "valor_desconto": r"Desconto[:\s]*R\$\s*([\d,]+\.?\d*)",
+            "valor_outras_deducoes": r"Outras Deduções[:\s]*R\$\s*([\d,]+\.?\d*)",
+            "valor_mora_multa": r"Mora / Multa[:\s]*R\$\s*([\d,]+\.?\d*)",
+            "valor_outros_acrescimos": r"Outros Acréscimos[:\s]*R\$\s*([\d,]+\.?\d*)",
+            "valor_cobrado": r"Valor Cobrado[:\s]*R\$\s*([\d,]+\.?\d*)",
+            "autenticacao": r"Autenticação[:\s]*([A-Za-z0-9\s]+)",
+            "ficha_compensacao": r"Ficha de Compensação[:\s]*([A-Za-z0-9\s]+)",
+            "codigo_operacional": r"Código Operacional[:\s]*(\d+)",
+            "valor_operacional": r"Valor Operacional[:\s]*R\$\s*([\d,]+\.?\d*)",
+            "data_operacional": r"Data Operacional[:\s]*(\d{2}/\d{2}/\d{4})",
+            "tipo_operacao": r"Tipo de Operação[:\s]*([A-Za-z\s]+)",
+            "responsavel": r"Responsável[:\s]*([A-Za-z\s]+)",
+            "codigo_responsavel": r"Código do Responsável[:\s]*(\d+)",
+            "matricula_responsavel": r"Matrícula do Responsável[:\s]*(\d+)",
+            "endereco_pagador": r"Endereço do Pagador[:\s]*([A-Za-z0-9\s,.-]+)",
+            "telefone_pagador": r"Telefone[:\s]*([\d\s\-\(\)]+)",
+            "email_pagador": r"Email[:\s]*([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})",
+            "observacoes": r"Observações[:\s]*([A-Za-z0-9\s,.-]+)",
+            "instrucoes_especiais": r"Instruções Especiais[:\s]*([A-Za-z0-9\s,.-]+)",
+            "codigo_barras_digitavel": r"(\d{3}\d{3}\d{3}\.\d{1}\s+\d{3}\d{3}\d{3}\d{3}\d{3}\.\d{1}\s+\d{3}\d{3}\d{3}\d{3}\d{3}\.\d{1}\s+\d{1}\s+\d{3}\d{3}\d{3}\d{3}\d{3}\d{3}\d{3}\d{3}\d{3}\d{3})",
+            "linha_digitavel": r"(\d{3}\d{3}\d{3}\.\d{1}\s+\d{3}\d{3}\d{3}\d{3}\d{3}\.\d{1}\s+\d{3}\d{3}\d{3}\d{3}\d{3}\.\d{1}\s+\d{1}\s+\d{3}\d{3}\d{3}\d{3}\d{3}\d{3}\d{3}\d{3}\d{3}\d{3})",
+        }
+        
+        # Buscar cada padrão no texto
+        for nome_campo, padrao in padroes_extras.items():
+            match = re.search(padrao, self.texto_extraido, re.IGNORECASE)
+            if match:
+                valor = match.group(1).strip()
+                if valor:  # Só adiciona se não estiver vazio
+                    dados_extras[nome_campo] = valor
+        
+        # Buscar linhas que podem conter informações extras
+        linhas = self.texto_extraido.split('\n')
+        for linha in linhas:
+            linha = linha.strip()
+            if linha and ':' in linha and len(linha) > 10:
+                # Verificar se é uma linha com informação extra
+                if not any(campo in linha.lower() for campo in [
+                    'beneficiário', 'pagador', 'vencimento', 'valor', 'cnpj', 
+                    'cpf', 'endereço', 'cep', 'aluno', 'matrícula', 'curso',
+                    'banco', 'agência', 'carteira', 'espécie', 'aceite',
+                    'local', 'multa', 'juros', 'instruções'
+                ]):
+                    # Pode ser uma informação extra
+                    if ':' in linha:
+                        chave, valor = linha.split(':', 1)
+                        chave = chave.strip().lower().replace(' ', '_')
+                        valor = valor.strip()
+                        if valor and chave not in dados_extras:
+                            dados_extras[f"info_{chave}"] = valor
+        
+        self.logger.info("Dados extras extraídos", quantidade=len(dados_extras))
+        return dados_extras
+
     def _identificar_tipo_boleto(self) -> str:
         """Identifica o tipo do boleto baseado no conteúdo"""
         if (
@@ -321,6 +534,7 @@ class BoletoParser:
             endereco_instituicao=self._extrair_endereco_instituicao(),
             tipo_boleto=tipo_boleto,
             texto_extraido=self.texto_extraido,
+            dados_extras=self._extrair_dados_extras(),
         )
 
         self.logger.info(

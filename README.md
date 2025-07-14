@@ -18,6 +18,12 @@ Parser inteligente de boletos bancários PDF que extrai dados estruturados e ger
 - ✅ **Progress bars** e feedback visual
 - ✅ **Comandos de desenvolvimento** e debug
 - ✅ **Suporte a boletos educacionais** e bancários
+- ✅ **Decodificação de códigos digitáveis**
+- ✅ **Campos extras dinâmicos**
+
+## 📚 Documentação
+
+- 📖 **[Estratégia Universal de Parsing](docs/estrategia_parsing_universal.md)** - Guia completo para implementação de parser universal
 
 ## 📋 Pré-requisitos
 

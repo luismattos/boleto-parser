@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Dict, Any
 
 from pydantic import BaseModel, Field
 
@@ -89,3 +89,9 @@ class BoletoData(BaseModel):
         default="educacional", description="Tipo do boleto identificado"
     )
     texto_extraido: str = Field(description="Texto bruto extraído do PDF")
+    
+    # Dados extras e opcionais
+    dados_extras: Dict[str, Any] = Field(
+        default_factory=dict,
+        description="Dados adicionais específicos do boleto que não se encaixam nos campos padrão"
+    )

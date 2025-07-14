@@ -6,7 +6,7 @@ from fastapi import FastAPI, File, HTTPException, UploadFile
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
-from .parser import BoletoParser
+from .parser import BoletoParser, BoletoDecoder
 
 app = FastAPI(
     title="Boleto Parser API",
@@ -15,6 +15,7 @@ app = FastAPI(
 )
 
 parser = BoletoParser()
+decoder = BoletoDecoder()
 
 
 class ParseResponse(BaseModel):
@@ -26,6 +27,14 @@ class ParseResponse(BaseModel):
     tipo_boleto: Optional[str] = None
 
 
+class DecodeResponse(BaseModel):
+    """Resposta da API de decodificação"""
+
+    success: bool
+    data: Optional[dict] = None
+    error: Optional[str] = None
+
+
 @app.get("/")
 async def root():
     """Endpoint raiz"""
@@ -34,6 +43,7 @@ async def root():
         "version": "1.0.0",
         "endpoints": {
             "/parse": "POST - Parse arquivo PDF de boleto",
+            "/decode": "POST - Decodificar código digitável",
             "/validate": "POST - Validar se arquivo é boleto válido",
             "/extract-text": "POST - Extrair texto bruto do PDF",
         },
@@ -80,6 +90,27 @@ async def parse_boleto(file: UploadFile = File(...)):
 
     except Exception as e:
         return ParseResponse(success=False, error=str(e))
+
+
+@app.post("/decode", response_model=DecodeResponse)
+async def decode_digitavel(digitavel: str):
+    """
+    Decodifica um código digitável de boleto bancário.
+
+    Args:
+        digitavel: Código digitável do boleto (ex: 03399.16140 70000.019182 81556.601014 4 11370000038936)
+
+    Returns:
+        JSON com dados decodificados do boleto
+    """
+    try:
+        # Decodificar código digitável
+        dados = decoder.decodificar_digitavel(digitavel)
+
+        return DecodeResponse(success=True, data=dados)
+
+    except Exception as e:
+        return DecodeResponse(success=False, error=str(e))
 
 
 @app.post("/validate")
