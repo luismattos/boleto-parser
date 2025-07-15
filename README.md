@@ -4,26 +4,36 @@ Parser inteligente de boletos bancários PDF que extrai dados estruturados e ger
 
 ## 🚀 Funcionalidades
 
-- ✅ **Detecção automática** de tipo de arquivo
-- ✅ **Extração de texto** de PDFs com `pdftotext`
-- ✅ **Interpretação inteligente** de dados de boletos
-- ✅ **Geração de JSON estruturado** para integração
+### ✅ Implementado e Testado
+- ✅ **Módulo Digitavel** - Parsing, validação e extração de linha digitável (98% cobertura)
+- ✅ **Validação completa** - DVs dos campos e DV geral com correção automática
 - ✅ **CLI avançada** com Typer e Rich
-- ✅ **API REST** com FastAPI
-- ✅ **Containerização** com Docker
+- ✅ **API REST** com FastAPI (estrutura básica)
 - ✅ **Logging estruturado** com structlog
-- ✅ **Processamento em lote** para produção
 - ✅ **Múltiplos formatos de saída** (JSON, Pretty, Table, CSV)
-- ✅ **Validação rigorosa** de boletos
-- ✅ **Progress bars** e feedback visual
+- ✅ **Infraestrutura de testes** - Nox, Poetry, Pytest, Coverage
 - ✅ **Comandos de desenvolvimento** e debug
-- ✅ **Suporte a boletos educacionais** e bancários
-- ✅ **Decodificação de códigos digitáveis**
-- ✅ **Campos extras dinâmicos**
+- ✅ **Progress bars** e feedback visual
+
+### 🔄 Em Desenvolvimento
+- 🔄 **Módulo Boleto** - Parsing universal de boletos (estrutura básica)
+- 🔄 **Módulo Parser** - Extração inteligente de campos (estrutura básica)
+- 🔄 **Integração completa** - Pipeline PDF → Texto → Parsing → JSON
+- 🔄 **Validação cruzada** - Comparação entre código de barras e texto extraído
+
+### ❌ Pendente
+- ❌ **Detecção automática** de tipo de arquivo
+- ❌ **Extração de texto** de PDFs com `pdftotext`
+- ❌ **Processamento em lote** para produção
+- ❌ **Suporte a boletos educacionais** e bancários
+- ❌ **Containerização** com Docker
+- ❌ **Campos extras dinâmicos**
 
 ## 📚 Documentação
 
 - 📖 **[Estratégia Universal de Parsing](docs/estrategia_parsing_universal.md)** - Guia completo para implementação de parser universal
+- 📊 **[Progresso de Implementação](docs/progresso_implementacao.md)** - Status atual e próximos passos do projeto
+- 📋 **[CLI Reference](docs/cli.md)** - Documentação completa da linha de comando
 
 ## 📋 Pré-requisitos
 
@@ -64,6 +74,9 @@ poetry install
 
 # Teste se está funcionando
 poetry run python -m src --help
+
+# Execute os testes do módulo digitavel
+poetry run nox -s digitavel
 
 ### Setup Opcional: Autocompletar do Poetry
 
@@ -128,6 +141,12 @@ poetry run python -m src dev lint
 # Executar testes
 poetry run python -m src dev test-all
 
+# Executar testes específicos do módulo digitavel
+poetry run nox -s digitavel
+
+# Executar todos os testes com cobertura
+poetry run nox -s coverage
+
 # Gerar documentação automática
 poetry run python -m src dev docs
 
@@ -141,13 +160,34 @@ poetry run python -m src dev schema
 - **isort**: Organização de imports
 - **flake8**: Verificação de estilo e erros
 - **mypy**: Verificação de tipos
-- **pytest**: Testes unitários
+- **pytest**: Testes unitários (42 testes passando)
 - **pre-commit**: Hooks automáticos de qualidade
+- **Nox**: Automação de tarefas e testes
+- **Coverage**: Relatórios de cobertura de código
 
 ### Documentação Automática
 
 - **typer-cli**: Gera documentação automática da CLI
 - **Schema atualizado**: JSON de exemplo sempre sincronizado com models
+
+## 📊 Status Atual do Projeto
+
+### ✅ Módulo Digitavel - COMPLETO
+O módulo de parsing e validação de linha digitável está **100% implementado e testado**:
+
+- **Cobertura de testes:** 98%
+- **42 testes passando** (unificados + avançados)
+- **Validação completa** de DVs (campo 1, 2, 3, geral)
+- **Correção automática** de DVs incorretos
+- **Extração de campos** (banco, valor, vencimento, etc.)
+- **Geração de digitáveis válidos** para testes
+
+### 🔄 Próximos Passos
+1. **Módulo Boleto** - Implementar parsing universal de boletos
+2. **Integração** - Conectar módulos em pipeline completo
+3. **API e CLI** - Completar funcionalidades de produção
+
+📖 **Veja o [Progresso de Implementação](docs/progresso_implementacao.md)** para detalhes completos.
 
 ## 🎯 Uso
 
