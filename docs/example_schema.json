@@ -46,5 +46,6 @@
     "cep": "01234-567"
   },
   "tipo_boleto": "educacional",
-  "texto_extraido": "texto bruto extraído do PDF..."
+  "texto_extraido": "texto bruto extraído do PDF...",
+  "dados_extras": {}
 }

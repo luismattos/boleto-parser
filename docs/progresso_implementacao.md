@@ -76,18 +76,23 @@
 
 ### 1. **Módulo Boleto** - 🚧 EM ANDAMENTO
 **Arquivo:** `src/core/boleto.py`  
-**Status:** Estrutura básica implementada
+**Status:** Implementação ativa - Sessão 1 em progresso
 
 #### Implementado:
 - ✅ **Classe `Boleto`** - Estrutura básica
 - ✅ **Validação básica** - Campos obrigatórios
 - ✅ **Integração com Digitavel** - Parsing de linha digitável
 
+#### Em Progresso (Sessão 1):
+- 🔄 **Extração de campos principais** - Nome cedente, pagador, valores, datas
+- 🔄 **Padrões regex universais** - Implementar padrões da estratégia documentada
+- 🔄 **Testes básicos** - Validar funcionalidade inicial
+
 #### Pendente:
-- 🔄 **Parsing universal** - Implementar estratégia de parsing universal
-- 🔄 **Extração de campos** - Implementar extração de todos os campos obrigatórios
-- 🔄 **Validação cruzada** - Comparar dados do código de barras com texto
-- 🔄 **Suporte a múltiplos tipos** - Bancário, educacional, comercial
+- ❌ **Todos os campos obrigatórios** - Implementar extração completa
+- ❌ **Validação cruzada** - Comparar dados do código de barras com texto
+- ❌ **Suporte a múltiplos tipos** - Bancário, educacional, comercial
+- ❌ **Testes abrangentes** - Cobertura completa de casos
 
 ### 2. **Módulo Parser** - 🚧 ESTRUTURA BÁSICA
 **Arquivo:** `src/parser.py`  
@@ -132,11 +137,26 @@
 
 ## 🎯 Próximos Passos Prioritários
 
-### Fase 1: Completar Módulo Boleto (Prioridade ALTA)
-1. **Implementar parsing universal** seguindo a estratégia documentada
-2. **Extrair campos obrigatórios** usando padrões regex
-3. **Implementar validação cruzada** entre código de barras e texto
-4. **Criar testes abrangentes** para o módulo boleto
+### Fase 1: Completar Módulo Boleto (Prioridade ALTA) - 🚧 EM ANDAMENTO
+**Sessão atual:** Implementação do parsing universal básico
+
+#### Sessão 1: Parsing Universal Básico (ATUAL)
+1. ✅ **Estrutura da classe Boleto** - Implementar estrutura básica
+2. 🔄 **Extração de campos obrigatórios principais** - Nome cedente, pagador, valores, datas
+3. 🔄 **Integração com Digitavel** - Conectar módulos existentes
+4. 🔄 **Testes básicos** - Validar funcionalidade inicial
+
+#### Sessão 2: Campos Completos e Validação (PRÓXIMA)
+1. ❌ **Todos os campos obrigatórios** - Implementar extração completa
+2. ❌ **Validação cruzada** - Comparar dados do código de barras com texto
+3. ❌ **Testes abrangentes** - Cobertura completa de casos
+4. ❌ **Tratamento de erros** - Recuperação e fallbacks
+
+#### Sessão 3: Pipeline Completo (FUTURA)
+1. ❌ **PDF → Texto → Parsing → JSON** - Pipeline end-to-end
+2. ❌ **Testes de integração** - Validação completa
+3. ❌ **Otimização de performance** - Benchmark e melhorias
+4. ❌ **Documentação de uso** - Exemplos práticos
 
 ### Fase 2: Integração e Pipeline (Prioridade ALTA)
 1. **Integrar Boleto + Digitavel** em um pipeline completo
@@ -207,4 +227,5 @@
 ---
 
 **Última atualização:** Janeiro 2025  
-**Próxima revisão:** Após implementação do módulo boleto 
+**Status atual:** Sessão 1 do módulo boleto em andamento  
+**Próxima revisão:** Após conclusão da Sessão 1 
