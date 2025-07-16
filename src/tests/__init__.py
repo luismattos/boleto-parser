@@ -3,4 +3,4 @@
 # Este módulo contém testes para desenvolvimento e validação
 # Não são parte da API pública do sistema
 
-__all__ = [] 
+__all__ = []

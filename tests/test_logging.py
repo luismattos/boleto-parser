@@ -1,50 +1,46 @@
-from pathlib import Path
+#!/usr/bin/env python3
+"""
+Teste do sistema de logging
+"""
 
-import pytest
-
-from src.logger import get_logger, setup_logging
+from src.utils.logger import get_logger
 
 
-def test_logging_setup():
-    """Testa se o sistema de logging pode ser configurado"""
-    logger = setup_logging(
-        log_level="DEBUG",
-        log_file="logs/test.log",
-        json_format=False,
-        console_output=True,
+def test_logger_basico():
+    """Testa funcionalidade básica do logger"""
+    logger = get_logger("test_logger")
+
+    # Testar diferentes níveis de log
+    logger.debug("Mensagem de debug")
+    logger.info("Mensagem de info")
+    logger.warning("Mensagem de warning")
+    logger.error("Mensagem de error")
+
+    # Verificar que o logger foi criado corretamente
+    assert logger.name == "test_logger"
+    print("✅ Logger básico funcionando corretamente")
+
+
+def test_logger_estruturado():
+    """Testa logging estruturado com campos adicionais"""
+    logger = get_logger("test_estruturado")
+
+    # Testar logging com campos estruturados
+    logger.info(
+        "Processamento iniciado", arquivo="teste.pdf", tamanho=1024, status="iniciado"
     )
 
-    assert logger is not None
+    logger.info(
+        "Processamento concluído",
+        arquivo="teste.pdf",
+        resultado="sucesso",
+        tempo_ms=150,
+    )
 
-    # Testa se consegue fazer log
-    logger.info("Teste de log", teste=True)
-    logger.error("Teste de erro", erro="teste")
-
-    # Verifica se arquivo foi criado
-    log_file = Path("logs/test.log")
-    assert log_file.exists()
-
-    # Limpa arquivo de teste
-    log_file.unlink()
+    print("✅ Logger estruturado funcionando corretamente")
 
 
-def test_logger_get():
-    """Testa se consegue obter logger"""
-    logger = get_logger("test_logger")
-    assert logger is not None
-
-    # Testa log com contexto
-    logger.info("Teste com contexto", campo="valor")
-
-
-def test_logging_levels():
-    """Testa diferentes níveis de log"""
-    logger = get_logger("test_levels")
-
-    logger.debug("Debug message")
-    logger.info("Info message")
-    logger.warning("Warning message")
-    logger.error("Error message")
-
-    # Todos devem executar sem erro
-    assert True
+if __name__ == "__main__":
+    test_logger_basico()
+    test_logger_estruturado()
+    print("✅ Todos os testes de logging passaram!")

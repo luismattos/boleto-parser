@@ -3,7 +3,7 @@
 Entry point para execução direta com: python -m src
 """
 
-from .cli import app
+from .cli.main import app
 
 if __name__ == "__main__":
     app()

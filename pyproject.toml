@@ -52,6 +52,20 @@ target-version = ['py39']
 profile = "black"
 line_length = 88
 
+[tool.flake8]
+max-line-length = 88
+extend-ignore = ["E203", "W503", "E501"]
+exclude = [
+    ".git",
+    "__pycache__",
+    "build",
+    "dist",
+    ".venv",
+    "venv",
+    ".nox",
+    "htmlcov",
+]
+
 [tool.mypy]
 python_version = "3.9"
 warn_return_any = true

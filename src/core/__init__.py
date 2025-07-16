@@ -1,12 +1,23 @@
-# Core Module - Classes principais do sistema
+"""
+Módulo core do sistema de boletos bancários.
 
-from .boleto import BoletoBancario, TipoDocumento, TipoAceite
-from .digitavel import Digitavel, CamposDigitavel
+Este módulo contém as classes fundamentais para representação e manipulação
+de boletos bancários conforme especificações da Febraban.
+"""
+
+from .boleto import BoletoBancario
+from .digitavel import CamposDigitavel, Digitavel
+from .enums import TipoAceite, TipoCarteira, TipoDocumento, TipoMoeda
+from .validators import BoletoValidator, DigitavelValidator
 
 __all__ = [
     "BoletoBancario",
-    "TipoDocumento", 
-    "TipoAceite",
     "Digitavel",
-    "CamposDigitavel"
-] 
+    "CamposDigitavel",
+    "TipoDocumento",
+    "TipoAceite",
+    "TipoMoeda",
+    "TipoCarteira",
+    "BoletoValidator",
+    "DigitavelValidator",
+]

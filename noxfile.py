@@ -23,12 +23,12 @@ def lint(session):
     # isort import sorting check
     session.run("poetry", "run", "isort", "--check-only", "src", "tests", external=True)
     
-    # flake8 linting
+    # flake8 linting (priorizando Black, ignorando E501)
     session.run(
         "poetry", "run", "flake8",
         "src", "tests",
         "--max-line-length=88",
-        "--extend-ignore=E203,W503",
+        "--extend-ignore=E203,W503,E501",
         external=True
     )
 
@@ -60,7 +60,7 @@ def ci(session):
     # Run all checks
     session.run("poetry", "run", "black", "--check", "src", "tests", external=True)
     session.run("poetry", "run", "isort", "--check-only", "src", "tests", external=True)
-    session.run("poetry", "run", "flake8", "src", "tests", "--max-line-length=88", "--extend-ignore=E203,W503", external=True)
+    session.run("poetry", "run", "flake8", "src", "tests", "--max-line-length=88", "--extend-ignore=E203,W503,E501", external=True)
     session.run("poetry", "run", "mypy", "src", external=True)
     session.run("poetry", "run", "pytest", external=True)
     
